@@ -42,8 +42,13 @@ class MonitorDormilonSystem {
 
                         System.out.println("Estudiante " + id + " esta siendo atendido por el monitor.");
                         Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 3000)); // Simula la consulta
-                        System.out.println("Estudiante " + id + " ha sido atendido y se va.");
-                        chairsSemaphore.release(); // Libera la silla
+                        chairsSemaphore.release(); // Libera la silla, primero se libera y después se imprime
+
+                        synchronized (this) {
+                            System.out.println("Estudiante " + id + " ha sido atendido y se va.");
+                            this.notifyAll(); // Notifica al monitor que ya imprimió su mensaje
+                        }
+
                     } else {
                         System.out.println("Estudiante " + id + " no encontro sillas libres y regresa a programar.");
                     }
@@ -74,13 +79,12 @@ class MonitorDormilonSystem {
                         }
 
                         Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 3000)); // Simula el tiempo de ayuda
-                        System.out.println("El monitor ha terminado de ayudar a un estudiante.");
 
-                        synchronized (queueLock) {
-                            if (waitingQueue.isEmpty()) {
-                                System.out.println("El monitor no encuentra estudiantes y se va a dormir.");
-                            }
-                        }
+                        System.out.println("El monitor ha terminado de ayudar a un estudiante.");
+                    }
+
+                    if (waitingQueue.isEmpty()) {
+                        System.out.println("El monitor no encuentra estudiantes y se va a dormir.");
                     }
                 }
             } catch (InterruptedException e) {
